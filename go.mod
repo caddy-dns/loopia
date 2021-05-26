@@ -1,4 +1,4 @@
-module github.com/kmpm/caddy-dns-loopia
+module github.com/caddy-dns/loopia
 
 go 1.16
 
