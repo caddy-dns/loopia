@@ -9,9 +9,9 @@ the [Loopia API](https://www.loopia.se/api/).
 
 __WARNING:__ This will only properly work if you set `propagation_timeout`.
 Loopia can use __up to 15 minutes__, but usually less, to propagate 
-the changes so a high enough timeout is needed.
-At the moment `propagation_timeout` is not supported in Caddyfiles but when caddyserver/caddy#4177 is solved
-that would be usable there as well.
+the changes so a high enough timeout is needed, default is 2 minutes.
+You can set the [propagation_timeout](https://caddyserver.com/docs/caddyfile/directives/tls#acme) value
+to compensate for this.
 
 ### Loopia API account requirements
 You will need to [create a API user account](https://www.loopia.se/api/authentication/) 
