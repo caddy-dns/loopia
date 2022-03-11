@@ -6,7 +6,9 @@ import (
 	libdnsloopia "github.com/libdns/loopia"
 )
 
-type Provider struct{ *libdnsloopia.Provider }
+type Provider struct {
+	*libdnsloopia.Provider
+}
 
 func init() {
 	caddy.RegisterModule(Provider{})
@@ -15,8 +17,10 @@ func init() {
 // CaddyModule returns the Caddy module information.
 func (Provider) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
-		ID:  "dns.providers.loopia",
-		New: func() caddy.Module { return &Provider{new(libdnsloopia.Provider)} },
+		ID: "dns.providers.loopia",
+		New: func() caddy.Module {
+			return &Provider{new(libdnsloopia.Provider)}
+		},
 	}
 }
 
@@ -27,6 +31,7 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 	p.Provider.Username = repl.ReplaceAll(p.Provider.Username, "")
 	p.Provider.Password = repl.ReplaceAll(p.Provider.Password, "")
 	p.Provider.Customer = repl.ReplaceAll(p.Provider.Customer, "")
+	p.Provider.OverrideDomain = repl.ReplaceAll(p.Provider.OverrideDomain, "")
 	return nil
 }
 
@@ -36,6 +41,7 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 //     username <username>
 //     password <password>
 //     customer <customer no>
+//     override_domain <domain>
 // }
 //
 func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
@@ -77,6 +83,16 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				}
 				if d.NextArg() {
 					p.Provider.Customer = d.Val()
+				}
+				if d.NextArg() {
+					return d.ArgErr()
+				}
+			case "override_domain":
+				if p.OverrideDomain != "" {
+					return d.Err("OverrideDomain already set")
+				}
+				if d.NextArg() {
+					p.OverrideDomain = d.Val()
 				}
 				if d.NextArg() {
 					return d.ArgErr()
