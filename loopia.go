@@ -91,10 +91,16 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 					return d.Err("Logging already set")
 				}
 				if d.NextArg() {
-					if d.Val() == "true" {
+					// Check if the value is a boolean
+					// and set the Logging field accordingly
+					// If not, return an error
+					switch d.Val() {
+					case "true", "yes", "on", "1":
 						p.Logging = true
-					} else if d.Val() == "false" {
+					case "false", "no", "off", "0":
 						p.Logging = false
+					default:
+						return d.Errf("unrecognized logging value '%s'", d.Val())
 					}
 				}
 				if d.NextArg() {
