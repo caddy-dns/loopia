@@ -2,3 +2,5 @@
 *.json
 Caddyfile
 caddy*
+var/
+*.env
