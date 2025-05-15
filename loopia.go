@@ -6,7 +6,10 @@ import (
 	libdnsloopia "github.com/libdns/loopia"
 )
 
-type Provider struct{ *libdnsloopia.Provider }
+type Provider struct {
+	*libdnsloopia.Provider
+	Logging bool `json:"logging,omitempty"` // Enable logging
+}
 
 func init() {
 	caddy.RegisterModule(Provider{})
@@ -16,7 +19,7 @@ func init() {
 func (Provider) CaddyModule() caddy.ModuleInfo {
 	return caddy.ModuleInfo{
 		ID:  "dns.providers.loopia",
-		New: func() caddy.Module { return &Provider{new(libdnsloopia.Provider)} },
+		New: func() caddy.Module { return &Provider{Provider: new(libdnsloopia.Provider)} },
 	}
 }
 
@@ -24,6 +27,9 @@ func (Provider) CaddyModule() caddy.ModuleInfo {
 func (p *Provider) Provision(ctx caddy.Context) error {
 	repl := caddy.NewReplacer()
 
+	if p.Logging {
+		p.Provider.SetLogger(ctx.Logger(p).Sugar())
+	}
 	p.Provider.Username = repl.ReplaceAll(p.Provider.Username, "")
 	p.Provider.Password = repl.ReplaceAll(p.Provider.Password, "")
 	p.Provider.Customer = repl.ReplaceAll(p.Provider.Customer, "")
@@ -32,12 +38,11 @@ func (p *Provider) Provision(ctx caddy.Context) error {
 
 // UnmarshalCaddyfile sets up the DNS provider from Caddyfile tokens. Syntax:
 //
-// loopia [<username> <password>] {
-//     username <username>
-//     password <password>
-//     customer <customer no>
-// }
-//
+//	loopia [<username> <password>] {
+//	    username <username>
+//	    password <password>
+//	    customer <customer no>
+//	}
 func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 	for d.Next() {
 		if d.NextArg() {
@@ -77,6 +82,20 @@ func (p *Provider) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 				}
 				if d.NextArg() {
 					p.Provider.Customer = d.Val()
+				}
+				if d.NextArg() {
+					return d.ArgErr()
+				}
+			case "logging":
+				if p.Logging {
+					return d.Err("Logging already set")
+				}
+				if d.NextArg() {
+					if d.Val() == "true" {
+						p.Logging = true
+					} else if d.Val() == "false" {
+						p.Logging = false
+					}
 				}
 				if d.NextArg() {
 					return d.ArgErr()
